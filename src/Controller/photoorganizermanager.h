@@ -18,9 +18,9 @@
 #include <QObject>
 
 class POModelManager;
-class POWindowsController;
 class QGuiApplication;
 class QQmlApplicationEngine;
+class QQuickWindow;
 
 class PhotoOrganizerManager : public QObject
 {
@@ -28,7 +28,7 @@ class PhotoOrganizerManager : public QObject
 
     public:
         explicit PhotoOrganizerManager(QObject *p_parent = nullptr);
-        ~PhotoOrganizerManager();
+        virtual ~PhotoOrganizerManager() override;
 
         Q_DISABLE_COPY(PhotoOrganizerManager)
 
@@ -37,25 +37,34 @@ class PhotoOrganizerManager : public QObject
 
         // --- Prepare Application ---
         void setupApplication();
-        void initApplication();                                     ///< App will finish launching
+        void initApplication();                                 ///< App will finish launching
+
+        QRectF getDefaultWindowFrame() const;
+        bool isWindowVisible() const;
 
     signals:
         void appFinishLaunching();
+        void closed();
         void appIsAboutToTerminate();
 
     public slots:
-        virtual void onAppIsAboutToTerminate();                     ///< App will terminate
+        void onAppIsAboutToTerminate();                         ///< App will terminate
 
     private slots:
         void onAppFinishLaunching();
 
+        void onWindowCreated(QObject *p_object, const QUrl &p_url);
+        void onWindowDestroyed();
+
     private:
+        void initializeTypes();
         void initializeModelManager();
         void initializeControllers();
 
         QQmlApplicationEngine*      m_engine=nullptr;
+        QQuickWindow*               m_window=nullptr;           ///< The root window object.
+
         POModelManager*             m_modelManager=nullptr;
-        POWindowsController*        m_windowsController=nullptr;    ///< A reference to the shared windows controller.
 
 };
 

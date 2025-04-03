@@ -7,38 +7,73 @@
  * @brief The POModelManager class
  *
  * @module Photo Organizer
- * @note This class is respondible for managing model (file management and so on...).
+ * @note This class is responsible for managing model (file management and so on...).
  *
  * Copyright (c) 2024 AphaseDev. All rights reserved.
  * https://github.com/AphaseDev
  */
 #include "pomodelmanager.h"
+#include "poutils.h"
 
+#include <QFile>
+#include <QDir>
+#include <QDebug>
 
 POModelManager::POModelManager(QObject *p_parent) :
     QObject(p_parent)
 {
+}
 
+
+void POModelManager::setFolderPath(QString p_folderPath)
+{
+    if (m_folderPath != p_folderPath) {
+        // Remove potential qml file prefix
+        POUtils::formatQmlUrlString(p_folderPath);
+
+        if (this->checkFolderPath(p_folderPath)) {
+            m_folderPath = p_folderPath;
+        }
+        // Emitting here allows to go back to the previous value of folderPath in UI
+        emit folderPathChanged();
+    }
+}
+
+/**
+ * @private
+ * @brief Checks wether the given path is valid. An alert message is emitted otherwize.
+ * @param p_folderPath
+ * @return true if the folder path is valid, false otherwize.
+ */
+bool POModelManager::checkFolderPath(const QString& p_folderPath)
+{
+    if (p_folderPath.size() > 0 && !QFileInfo::exists(p_folderPath)) {
+        // Display error
+        emit raiseAlert(tr("The folder does not exist, please select a valid path."));
+        return false;
+    }
+    return true;
 }
 
 
 void POModelManager::renameFile(const QString& p_filePath, const QString& p_oldFileName, const QString& p_fileName)
 {
-    QFile l_file(p_filePath);
-    QString l_fileDirPath = p_filePath.mid(0, p_filePath.length() - p_oldFileName.length());
+    const QString l_fileDirPath = p_filePath.mid(0, p_filePath.length() - p_oldFileName.length());
+    // qDebug() << "RENAME: " << l_fileDirPath << p_fileName;
 
-    qDebug() << "RENAME: " << l_fileDirPath << p_fileName;
-
-    l_file.rename(l_fileDirPath + p_fileName);
+    if (QFile l_file(p_filePath); !l_file.rename(l_fileDirPath + p_fileName)) {
+        // Display error
+        emit raiseAlert(tr("An error occured while renaming: %1.").arg(l_file.errorString()));
+    }
 }
 
 
 void POModelManager::createFolder(const QString& p_dirPath, const QString& p_dirName)
 {
     QString l_dirPath = p_dirPath;
-    if(l_dirPath.startsWith(QLatin1String("file:///")))
+    if (l_dirPath.startsWith(QLatin1String("file:///"))) {
         l_dirPath = l_dirPath.mid(8, l_dirPath.length());
-
+    }
     QDir l_dir;
     l_dir.setPath(l_dirPath);
     l_dir.mkdir(p_dirName);
@@ -48,9 +83,9 @@ void POModelManager::createFolder(const QString& p_dirPath, const QString& p_dir
 void POModelManager::moveFileToFolder(const QString& p_filePath, const QString& p_fileName, const QString& p_dirName)
 {
     QString l_filePath = p_filePath;
-    if(l_filePath.startsWith(QLatin1String("file:///")))
+    if (l_filePath.startsWith(QLatin1String("file:///"))) {
         l_filePath = l_filePath.mid(8, l_filePath.length());
-
+    }
     QFile l_file(l_filePath);
 
     l_filePath = l_filePath.mid(0, p_filePath.length() - p_fileName.length()); // dirPath
@@ -64,3 +99,4 @@ void POModelManager::moveFileToFolder(const QString& p_filePath, const QString& 
     l_file.rename(l_dir.absolutePath() + QDir::separator() + p_fileName);
 
 }
+
