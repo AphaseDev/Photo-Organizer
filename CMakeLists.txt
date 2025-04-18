@@ -51,6 +51,10 @@ qt_add_resources(Photo-Organizer "views"
         src/View/Settings.qml
         qtquickcontrols2.conf
         src/View/Controls/POTextField.qml
+        src/View/Controls/POButton.qml
+        src/View/Controls/POScrollBar.qml
+        src/View/Controls/POButtonGroup.qml
+        src/View/Utils.js
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

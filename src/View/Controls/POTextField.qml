@@ -9,7 +9,7 @@
  * @module Photo Organizer
  * @note Custom TextField component for Photo Organizer.
  *
- * Copyright (c) 2024 AphaseDev. All rights reserved.
+ * Copyright (c) 2025 AphaseDev. All rights reserved.
  * https://github.com/AphaseDev
  */
 import QtQuick

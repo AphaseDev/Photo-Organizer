@@ -33,10 +33,57 @@ void POModelManager::setFolderPath(QString p_folderPath)
 
         if (this->checkFolderPath(p_folderPath)) {
             m_folderPath = p_folderPath;
+
+            if (m_outputFoldersLeft.isEmpty() && m_outputFoldersRight.isEmpty()) {
+                this->setDefaultOutputFolders();
+            }
         }
         // Emitting here allows to go back to the previous value of folderPath in UI
         emit folderPathChanged();
     }
+}
+
+void POModelManager::setDefaultOutputFolders()
+{
+    auto l_folderPath = m_folderPath;
+    if (!l_folderPath.endsWith(QLatin1Char('/'))) {
+        l_folderPath.append(QLatin1Char('/'));
+    }
+
+    const int l_currentYear         = QDate::currentDate().year();
+    static const QString g_trip     = tr("Trip %1").arg(l_currentYear);
+    static const QString g_concert  = tr("Concert %1").arg(l_currentYear);
+    static const QString g_family   = tr("Family %1").arg(l_currentYear);
+    static const QString g_others   = tr("Others");
+
+    m_outputFoldersLeft  = {
+        { g_trip,   l_folderPath + g_trip, QColor() },
+        { g_concert, l_folderPath + g_concert, QColor() }
+    };
+    m_outputFoldersRight  = {
+        { g_family, l_folderPath + g_family, QColor() },
+        { g_others, l_folderPath + g_others, QColor() }
+    };
+}
+
+QVariantList POModelManager::getOutputFoldersLeftQml() const
+{
+    QVariantList l_newList;
+    l_newList.reserve(m_outputFoldersLeft.size());
+    for (const POFolderOutput &l_item : m_outputFoldersLeft) {
+        l_newList << QVariant::fromValue(l_item);
+    }
+    return l_newList;
+}
+
+QVariantList POModelManager::getOutputFoldersRightQml() const
+{
+    QVariantList l_newList;
+    l_newList.reserve(m_outputFoldersRight.size());
+    for (const POFolderOutput &l_item : m_outputFoldersRight) {
+        l_newList << QVariant::fromValue(l_item);
+    }
+    return l_newList;
 }
 
 /**

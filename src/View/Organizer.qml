@@ -27,6 +27,7 @@ Page {
 
         anchors.fill:   parent
 
+        // File Info
         POTextField {
             id: fileNameTextField
 
@@ -41,23 +42,26 @@ Page {
                     // Rename the file
                     mainWindow.modelManager.renameFile(currentFilePath, currentFileName, text);
                 }
+                giveFocusBackToViewer();
             }
         }
 
+        // Viewer
         ListView {
             id: folderListView
 
-            anchors.fill:       parent
-            snapMode:           ListView.SnapOneItem
+            anchors.fill:                parent
+            snapMode:                    ListView.SnapOneItem
             highlightFollowsCurrentItem: true
-            highlightRangeMode: ListView.StrictlyEnforceRange   // To update the currentIndex as the list is moved
-            orientation:        ListView.Horizontal
-            // boundsBehavior:     Flickable.StopAtBounds
-            focus:                  true
-            clip:                   true
-            // interactive:    false
-
-            model:              modelFolderPath.length > 0 ? folderModel : null // Added because if folderPath is null, the folderModel's default value is the application's working directory
+            highlightRangeMode:          ListView.StrictlyEnforceRange   // To update the currentIndex when the list is moved
+            highlightMoveDuration:       250
+            highlightMoveVelocity:       -1
+            orientation:                 ListView.Horizontal
+            // boundsBehavior:             Flickable.StopAtBounds
+            focus:                       true
+            clip:                        true
+            // keyNavigationWraps:         true
+            model:                       modelFolderPath.length > 0 ? folderModel : null    // Added because if folderPath is null, the folderModel's default value is the application's working directory
 
             onMovementEnded: {
                 // Auto-update currentIndex when the view settles on a new item
@@ -84,6 +88,8 @@ Page {
                     id: fileDelegate
 
                     Item {
+                        id: delegateItem
+
                         width:  folderListView.width    // Full-screen width
                         height: folderListView.height
 
@@ -96,101 +102,81 @@ Page {
                                 width:          folderListView.width
                                 height:         folderListView.height
                                 fillMode:       Image.PreserveAspectFit
-                                source:         /*!fileIsDir ?*/ fileUrl //: ""
+                                source:         fileUrl
                                 antialiasing:   true
                                 asynchronous:   true
                                 visible:        !fileIsDir
                             }
-                            //                            PinchArea {
-                            //                                height:         imageView.height
-                            //                                width:          imageView.width
-                            //                                pinch.target:   pictureDelegateColumn
-                            //                                pinch.dragAxis: Pinch.XAndYAxis
-
-                            //                                MouseArea {
-                            //                                    id: dragArea
-                            //                                    hoverEnabled:   true
-                            //                                    anchors.fill:   parent
-                            //                                    drag.target:    pictureDelegateColumn
-                            //                                    scrollGestureEnabled: false  // 2-finger-flick gesture should pass through to the Flickable
-                            //                                    onClicked: console.log('CLICKED')
-                            //                                }
-                            //                            }
                         }
 
-                        // ColumnLayout {
-                        //     id: columnLayout
+                        // Support key navigation
+                        focus: true
+                        Keys.onRightPressed: {
+                            if (!folderListView.moving && folderListView.interactive) {
+                                folderListView.incrementCurrentIndex();
+                            }
+                        }
+                        Keys.onLeftPressed: {
+                            if (!folderListView.moving && folderListView.interactive) {
+                                folderListView.decrementCurrentIndex();
+                            }
+                        }
+                        Keys.onSpacePressed: maximizeImage(imageView.source)
 
-                        //     width: 100
-                        //     height: 100
-                        //     spacing: 1
-                        //     anchors.right: parent.right
-                        //     anchors.rightMargin: 16
-                        //     anchors.verticalCenter: parent.verticalCenter
-
-                        //     Button {
-                        //         id: folderButton1
-
-                        //         Layout.alignment: Qt.AlignRight
-                        //         text: directoryNames[0]
-                        //         highlighted: true
-
-                        //         onClicked: {
-                        //             //console.log('Clicked: '+filePath+' '+fileName)
-                        //             mainWindow.modelManager.moveFileToFolder(filePath, fileName, folderButton1.text);
-                        //         }
-                        //         DropArea {
-                        //             anchors.fill: parent
-                        //             onEntered: {
-                        //                 console.log('DROPPED 1')
-                        //             }
-                        //         }
-                        //     } // folderButton1
-
-                        //     Button {
-                        //         id: folderButton2
-
-                        //         Layout.alignment: Qt.AlignRight
-                        //         text: directoryNames[1]
-                        //         highlighted: true
-
-                        //         onClicked: {
-                        //             mainWindow.modelManager.moveFileToFolder(filePath, fileName, folderButton2.text);
-                        //         }
-                        //         DropArea {
-                        //             anchors.fill: parent
-                        //             onEntered: {
-                        //                 console.log('DROPPED 1')
-                        //             }
-                        //         }
-                        //     } // folderButton2
-
-                        //     Button {
-                        //         id: folderButton3
-
-                        //         Layout.alignment: Qt.AlignRight
-                        //         text: directoryNames[2]
-                        //         highlighted: true
-
-                        //         onClicked: {
-                        //             mainWindow.modelManager.moveFileToFolder(filePath, fileName, folderButton3.text);
-                        //         }
-                        //         DropArea {
-                        //             anchors.fill: parent
-                        //             onEntered: {
-                        //                 console.log('DROPPED 1')
-                        //             }
-                        //         }
-                        //     } // folderButton3
-                        // }
+                        MouseArea {
+                            anchors.fill: parent
+                            onReleased: delegateItem.forceActiveFocus()
+                            onDoubleClicked: maximizeImage(imageView.source)
+                        }
                     } // Item
                 }
             }
 
+            Component.onCompleted: {
+                // To be able to use key navigation directly
+                giveFocusBackToViewer();
+            }
         } // ListView
-    }
 
 
+        // Output folders left
+        POButtonGroup {
+            id: buttonGroupLeft
+
+            side:           Qt.AlignLeft
+            x:              -homePage.padding
+            buttonsModel:   mainWindow.modelManager.outputFoldersLeft
+
+            onClickedCallback: function(p_index, p_folderPath, p_labelTitle) {
+                // TODO rewrite
+                // mainWindow.modelManager.moveFileToFolder(modelData.folderPath, homePage.currentFileName, modelData.labelTitle);
+
+                giveFocusBackToViewer();
+            }
+        }
+
+
+        // Output folders right
+        POButtonGroup {
+            id: buttonGroupRight
+
+            side:           Qt.AlignRight
+            x:              parent.width - width + homePage.padding
+            buttonsModel:   mainWindow.modelManager.outputFoldersRight
+
+            onClickedCallback: function(p_index, p_folderPath, p_labelTitle) {
+                // TODO rewrite
+                // mainWindow.modelManager.moveFileToFolder(modelData.folderPath, homePage.currentFileName, modelData.labelTitle);
+
+                giveFocusBackToViewer();
+            }
+        }
+
+    } // homePageItem
+
+
+
+    // Model
     FolderListModel {
         id: folderModel
 
@@ -207,75 +193,30 @@ Page {
     }
 
 
-    // -------------
-
-    // ListView {
-    //     id: listView
-    //     anchors.fill: parent
-    //     highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
-    //     model: folderModel
-    //     delegate: Item {
-    //         width: listView.width
-    //         height: 140
-
-    //         Keys.onSpacePressed: maximizeImage(listViewItemImage.source);
-
-    //         Image {
-    //             id: listViewItemImage
-    //             x: 5
-    //             y: 5
-    //             width: 128
-    //             height: 128
-    //             source: fileUrl
-    //         }
-
-    //         Text {
-    //             y: 5
-    //             anchors.left: listViewItemImage.right
-    //             anchors.leftMargin: 10
-    //             text: fileName
-    //             font.pointSize: 16
-    //         }
-
-    //         MouseArea {
-    //             anchors.fill: parent
-    //             onReleased: maximizeImage(listViewItemImage.source);
-    //         }
-    //     }
-    // }
-
-
-    // Full-screen image popup
+    // Maximize image popup
     Popup {
         id: imagePopup
 
-        modal: true
-        focus: true
-        dim: true
-        anchors.centerIn: parent
-        width: Math.min(fullSizeImage.sourceSize.width, parent.width * 0.7)
-        height: Math.min(fullSizeImage.sourceSize.height, parent.height * 0.7)
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        modal:              true
+        focus:              true
+        dim:                true
+        anchors.centerIn:   parent
+        width:              Math.min(fullSizeImage.sourceSize.width, parent.width * 0.8)
+        height:             Math.min(fullSizeImage.sourceSize.height, parent.height * 0.8)
+        closePolicy:        Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-        // Rectangle {
-        //     // width: Math.min(parent.width * 0.9, 600)
-        //     // height: Math.min(parent.height * 0.9, 600)
-        //     // width: fullSizeImage.
-        //     // height: fu
-        //     color: "black"
-        //     border.color: "white"
-        //     border.width: 2
-        //     radius: 8
-
-            Image {
-                id: fullSizeImage
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-            }
-        // }
+        Image {
+            id: fullSizeImage
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+        }
+        MouseArea {
+            anchors.fill: parent
+            onDoubleClicked: imagePopup.close()
+        }
     }
 
-    // Function to open the image in a popup
+    // Opens the image in a popup
     function maximizeImage(imageSource) {
         // console.log("Opening image: " + imageSource);
         if (imageSource && imageSource !== "") {
@@ -286,13 +227,8 @@ Page {
         }
     }
 
+    function giveFocusBackToViewer() {
+        folderListView.forceActiveFocus();
+    }
 
-
-    // FolderListModel {
-    //     id: folderModel
-
-    //     folder: mainWindow.modelManager.folderPath
-    //     showDirs: false
-    //     nameFilters: [ "*.png", "*.jpeg", "*.jpg", "*.gif" ]
-    // }
 }

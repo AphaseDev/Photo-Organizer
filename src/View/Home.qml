@@ -47,7 +47,7 @@ Page {
             }
         }
 
-        Button {
+        POButton {
             id: browseButton
 
             text: qsTr("Browse...")
@@ -55,14 +55,11 @@ Page {
             anchors.top: folderPathTextField.bottom
             anchors.topMargin: 10
             anchors.horizontalCenter: parent.horizontalCenter
-            Material.foreground: "black"
-            Material.background: Material.Yellow
-            Material.roundedScale: Material.LargeScale
 
             onClicked: folderDialog.open()
         }
 
-        Button {
+        POButton {
             id: organizeButton
 
             text: qsTr("Organize")
@@ -71,9 +68,6 @@ Page {
             anchors.top: browseButton.bottom
             anchors.topMargin: 5
             anchors.horizontalCenter: parent.horizontalCenter
-            Material.foreground: "black"
-            Material.background: Material.Yellow
-            Material.roundedScale: Material.LargeScale
 
             onClicked: mainWindow.switchToTab(1)
         }

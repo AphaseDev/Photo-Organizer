@@ -89,6 +89,8 @@ void PhotoOrganizerManager::initializeTypes()
 {
     qmlRegisterUncreatableMetaObject(POUtils::staticMetaObject, "POModel.ui", 1, 0, "POUtils", QStringLiteral("Error: access to enums and flags only.") );
 
+    qRegisterMetaType<POFolderOutput>("POFolderOutput");
+
 }
 
 void PhotoOrganizerManager::initializeModelManager()
